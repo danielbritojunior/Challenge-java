@@ -1,4 +1,7 @@
-package br.com.totvs.radar.model;
+package model;
+
+import model.Insight;
+import model.StatusAcao;
 
 public class CardAcao {
 

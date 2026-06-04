@@ -1,4 +1,4 @@
-package br.com.totvs.radar.model;
+package model;
 
 import java.time.LocalTime;
 

@@ -1,4 +1,4 @@
-package br.com.totvs.radar.model;
+package model;
 
 public enum StatusAcao {
     PENDENTE,

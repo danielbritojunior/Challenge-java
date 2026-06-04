@@ -1,6 +1,7 @@
-package br.com.totvs.radar.service;
+package service;
 
-import br.com.totvs.radar.model.*;
+import model.*;
+
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;

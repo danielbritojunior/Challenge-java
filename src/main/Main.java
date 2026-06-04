@@ -1,8 +1,8 @@
-package br.com.totvs.radar.main;
+package main;
 
-import br.com.totvs.radar.model.CardAcao;
-import br.com.totvs.radar.model.Reuniao;
-import br.com.totvs.radar.service.ProcessadorService;
+import model.CardAcao;
+import model.Reuniao;
+import service.ProcessadorService;
 import java.util.List;
 
 public class Main {
@@ -11,7 +11,6 @@ public class Main {
         System.out.println("INICIANDO RADAR DE AÇÃO TOTVS - SPRINT JAVA");
         System.out.println("==================================================");
 
-        // 1. Instanciando uma Reunião com o exemplo real do PDF da TOTVS
         String transcricaoExemplo = "Bom dia, João. Então, o nosso Protheus está atendendo o backoffice, "
                 + "mas o time de RH está sofrendo muito com a folha manual. O pessoal viu uma demo da "
                 + "Senior e gostou, mas eu prefiro consolidar tudo na TOTVS se o RM for realmente integrado. "
