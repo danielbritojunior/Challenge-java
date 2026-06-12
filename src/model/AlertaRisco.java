@@ -13,7 +13,6 @@ public class AlertaRisco extends Insight {
 
     @Override
     public String getDescricaoTipo() {
-        // Implementação do Polimorfismo
         return "CRÍTICO - Risco de Churn (Concorrente citado: " + concorrenteIdentificado + ")";
     }
 

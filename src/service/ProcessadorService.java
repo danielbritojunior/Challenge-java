@@ -9,42 +9,117 @@ import java.util.List;
 public class ProcessadorService {
 
     public List<CardAcao> gerarCardsDeAcao(Reuniao reuniao) {
+
         List<CardAcao> cards = new ArrayList<>();
+
         String texto = reuniao.getTextoBruto().toLowerCase();
 
-        LocalTime tempoGatilho = LocalTime.of(0, 10, 15);
-        LocalTime tempoRisco = LocalTime.of(0, 10, 15);
+        LocalTime base = LocalTime.of(0, 10, 0);
+        int contador = 0;
 
         if (texto.contains("rh") || texto.contains("folha manual")) {
-            Insight gatilho = new GatilhoCompra(tempoGatilho, "time de RH está sofrendo muito com a folha manual", "TOTVS RM");
-            CardAcao cardCompra = new CardAcao(gatilho, "Agendar reunião técnica para ofertar o módulo TOTVS RM (Folha de Pagamento).");
-            cards.add(cardCompra);
+
+            LocalTime tempo = base.plusSeconds(contador += 5);
+
+            cards.add(new CardAcao(
+                    new GatilhoCompra(
+                            tempo,
+                            extrairTrecho(texto, "rh"),
+                            "TOTVS RM"
+                    ),
+                    "Agendar reunião técnica para ofertar TOTVS RM"
+            ));
         }
 
         if (texto.contains("senior")) {
-            Insight risco = new AlertaRisco(tempoRisco, "O pessoal viu uma demo da Senior e gostou", "Senior");
-            CardAcao cardRisco = new CardAcao(risco, "CRÍTICO: Enviar material de diferenciais competitivos contra a Senior e reter cliente.");
-            cards.add(cardRisco);
+
+            LocalTime tempo = base.plusSeconds(contador += 5);
+
+            cards.add(new CardAcao(
+                    new AlertaRisco(
+                            tempo,
+                            extrairTrecho(texto, "senior"),
+                            "Senior"
+                    ),
+                    "Enviar diferenciais competitivos contra a Senior"
+            ));
         }
+
+        if (texto.contains("sap")) {
+
+            LocalTime tempo = base.plusSeconds(contador += 5);
+
+            cards.add(new CardAcao(
+                    new AlertaRisco(
+                            tempo,
+                            extrairTrecho(texto, "sap"),
+                            "SAP"
+                    ),
+                    "Avaliar risco competitivo SAP"
+            ));
+        }
+
+        if (texto.contains("crm")) {
+
+            LocalTime tempo = base.plusSeconds(contador += 5);
+
+            cards.add(new CardAcao(
+                    new GatilhoCompra(
+                            tempo,
+                            extrairTrecho(texto, "crm"),
+                            "TOTVS CRM"
+                    ),
+                    "Ofertar CRM integrado"
+            ));
+        }
+        if (texto.contains("estoque")) {
+
+            LocalTime tempo = base.plusSeconds(contador += 5);
+
+            cards.add(new CardAcao(
+                    new GatilhoCompra(
+                            tempo,
+                            extrairTrecho(texto, "estoque"),
+                            "TOTVS Supply"
+                    ),
+                    "Propor automação de estoque"
+            ));
+        }
+
         return cards;
     }
 
     public void priorizarEExibirCards(List<CardAcao> cards) {
-        cards.sort((card1, card2) -> {
-            int min1 = card1.getInsightVinculado().getTimestamp().getMinute();
-            int min2 = card2.getInsightVinculado().getTimestamp().getMinute();
 
-            if (min1 == min2) {
-                boolean c1EhRisco = card1.getInsightVinculado() instanceof AlertaRisco;
-                boolean c2EhRisco = card2.getInsightVinculado() instanceof AlertaRisco;
-                if (c1EhRisco && !c2EhRisco) return -1; // Coloca card1 no topo
-                if (!c1EhRisco && c2EhRisco) return 1;  // Coloca card2 no topo
-            }
-            return card1.getInsightVinculado().getTimestamp().compareTo(card2.getInsightVinculado().getTimestamp());
+        cards.sort((c1, c2) -> {
+
+            boolean r1 = c1.getInsightVinculado() instanceof AlertaRisco;
+            boolean r2 = c2.getInsightVinculado() instanceof AlertaRisco;
+
+            if (r1 && !r2) return -1;
+            if (!r1 && r2) return 1;
+
+            return c1.getInsightVinculado()
+                    .getTimestamp()
+                    .compareTo(c2.getInsightVinculado().getTimestamp());
         });
 
         for (CardAcao card : cards) {
             card.exibirCard();
         }
+    }
+
+    private String extrairTrecho(String texto, String palavra) {
+
+        int index = texto.indexOf(palavra);
+
+        if (index == -1) {
+            return "Trecho não encontrado";
+        }
+
+        int inicio = Math.max(0, index - 25);
+        int fim = Math.min(texto.length(), index + 50);
+
+        return texto.substring(inicio, fim).trim();
     }
 }

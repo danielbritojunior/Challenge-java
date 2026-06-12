@@ -15,7 +15,6 @@ public class CardAcao {
         this.status = StatusAcao.PENDENTE;
     }
 
-    // Exibe o card formatado de forma limpa
     public void exibirCard() {
         System.out.println("-------------------------------------------------");
         System.out.println("[" + insightVinculado.getTimestamp() + "] " + insightVinculado.getDescricaoTipo());
@@ -25,7 +24,6 @@ public class CardAcao {
         System.out.println("-------------------------------------------------");
     }
 
-    // Getters e Setters
     public Insight getInsightVinculado() { return insightVinculado; }
     public void setInsightVinculado(Insight insightVinculado) { this.insightVinculado = insightVinculado; }
 
