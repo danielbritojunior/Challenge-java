@@ -8,6 +8,7 @@ public class CardAcao {
     private Insight insightVinculado;
     private String sugestaoTarefa;
     private StatusAcao status;
+    private Integer id;
 
     public CardAcao(Insight insightVinculado, String sugestaoTarefa) {
         this.insightVinculado = insightVinculado;
@@ -32,4 +33,14 @@ public class CardAcao {
 
     public StatusAcao getStatus() { return status; }
     public void setStatus(StatusAcao status) { this.status = status; }
+
+    public CardAcao(Integer id, Insight insightVinculado, String sugestaoTarefa, StatusAcao status) {
+        this.id = id;
+        this.insightVinculado = insightVinculado;
+        this.sugestaoTarefa = sugestaoTarefa;
+        this.status = status;
+    }
+
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
 }

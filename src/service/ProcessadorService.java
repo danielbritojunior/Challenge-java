@@ -5,6 +5,7 @@ import model.*;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ProcessadorService {
 
@@ -121,5 +122,27 @@ public class ProcessadorService {
         int fim = Math.min(texto.length(), index + 50);
 
         return texto.substring(inicio, fim).trim();
+    }
+    public List<CardAcao> filtrarPorStatus(List<CardAcao> cards, StatusAcao status) {
+        if (cards == null || status == null) return new ArrayList<>();
+        return cards.stream()
+                .filter(card -> card.getStatus() == status)
+                .toList();
+    }
+
+    public Map<String, Number> calcularMetricas(List<CardAcao> cards) {
+        if (cards == null || cards.isEmpty()) {
+            return Map.of("total", 0, "pendentes", 0L, "concluidos", 0L, "taxaResolucao", 0.0);
+        }
+        long pendentes = cards.stream().filter(c -> c.getStatus() == StatusAcao.PENDENTE).count();
+        long concluidos = cards.stream().filter(c -> c.getStatus() == StatusAcao.CONCLUIDO).count();
+        double taxa = ((double) concluidos / cards.size()) * 100.0;
+
+        return Map.of(
+                "total", cards.size(),
+                "pendentes", pendentes,
+                "concluidos", concluidos,
+                "taxaResolucao", Math.round(taxa * 100.0) / 100.0
+        );
     }
 }

@@ -1,5 +1,4 @@
 package model;
-import model.Insight;
 
 import java.time.LocalTime;
 
@@ -8,6 +7,11 @@ public class AlertaRisco extends Insight {
 
     public AlertaRisco(LocalTime timestamp, String trechoTexto, String concorrenteIdentificado) {
         super(timestamp, trechoTexto);
+        this.concorrenteIdentificado = concorrenteIdentificado;
+    }
+
+    public AlertaRisco(Integer id, LocalTime timestamp, String trechoTexto, String concorrenteIdentificado) {
+        super(id, timestamp, trechoTexto);
         this.concorrenteIdentificado = concorrenteIdentificado;
     }
 

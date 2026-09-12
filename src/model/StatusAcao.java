@@ -2,6 +2,7 @@ package model;
 
 public enum StatusAcao {
     PENDENTE,
-    EXECUTADO,
+    EM_ANDAMENTO,
+    CONCLUIDO,
     DESCARTADO;
 }

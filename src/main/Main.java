@@ -1,11 +1,13 @@
 package main;
 
+import dao.CardAcaoDAO;
 import model.CardAcao;
 import model.Reuniao;
 import model.StatusAcao;
 import service.ProcessadorService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
@@ -13,6 +15,8 @@ public class Main {
     public static void main(String[] args) {
 
         Scanner sc = new Scanner(System.in);
+        CardAcaoDAO dao = new CardAcaoDAO();
+        ProcessadorService processador = new ProcessadorService();
 
         String transcricaoExemplo =
                 "Bom dia equipe. O time de RH está sofrendo muito com a folha manual e precisamos automatizar isso no TOTVS RM. "
@@ -25,219 +29,227 @@ public class Main {
         Reuniao reuniaoComercial =
                 new Reuniao(1, "Gestor Operacional (Decisor)", transcricaoExemplo);
 
-        ProcessadorService processador = new ProcessadorService();
-
-        List<CardAcao> cardsGerados = null;
+        List<CardAcao> cardsAtuais = dao.listarCards();
 
         int opcao;
 
         do {
-
             System.out.println("\n========================================");
-            System.out.println("RADAR DE AÇÃO TOTVS - DASHBOARD");
+            System.out.println("RadarIA - DASHBOARD ORACLE");
             System.out.println("========================================");
             System.out.println("1 - Visualizar transcrição");
-            System.out.println("2 - Gerar / Visualizar cards");
-            System.out.println("3 - Alterar status de card");
-            System.out.println("4 - Resumo geral");
-            System.out.println("5 - Filtrar cards");
-            System.out.println("6 - Sair");
-            System.out.print("Escolha: ");
+            System.out.println("2 - Gerar cards");
+            System.out.println("3 - Listar cards");
+            System.out.println("4 - Alterar status");
+            System.out.println("5 - Excluir card");
+            System.out.println("6 - Resumo de Métricas");
+            System.out.println("7 - Filtrar cards por status");
+            System.out.println("8 - Sair");
+            System.out.print("Escolha uma opção: ");
 
             opcao = sc.nextInt();
 
             switch (opcao) {
 
                 case 1:
-                    System.out.println("\n=== TRANSCRIÇÃO ===");
+                    System.out.println("\n=== TRANSCRIÇÃO DA REUNIÃO ===");
                     imprimirTextoFormatado(reuniaoComercial.getTextoBruto(), 70);
                     break;
 
                 case 2:
-                    if (cardsGerados == null) {
-                        System.out.println("\n[Gerando cards...]");
-                        cardsGerados = processador.gerarCardsDeAcao(reuniaoComercial);
+                    System.out.println("\n[1/2] Processando texto da reunião e gerando cards...");
+                    List<CardAcao> novosCards = processador.gerarCardsDeAcao(reuniaoComercial);
+
+                    System.out.println("[2/2] Persistindo insights e cards no Oracle...");
+                    for (CardAcao card : novosCards) {
+                        dao.inserirCard(card);
                     }
 
-                    System.out.println("\n=== CARDS ===");
-                    processador.priorizarEExibirCards(cardsGerados);
+                    cardsAtuais = dao.listarCards();
+
+                    System.out.println("\n=== CARDS SALVOS COM SUCESSO NO BANCO ===");
+                    processador.priorizarEExibirCards(cardsAtuais);
                     break;
 
                 case 3:
+                    System.out.println("\n[Consultando registros na tabela CARD_ACAO...]");
+                    cardsAtuais = dao.listarCards();
 
-                    if (cardsGerados == null || cardsGerados.isEmpty()) {
-                        System.out.println("Gere os cards primeiro!");
-                        break;
+                    if (cardsAtuais.isEmpty()) {
+                        System.out.println("Nenhum card cadastrado no Oracle. Utilize a opção 2 para gerar.");
+                    } else {
+                        System.out.println("\n=== CARDS CADASTRADOS NO BANCO (" + cardsAtuais.size() + ") ===");
+                        processador.priorizarEExibirCards(cardsAtuais);
                     }
-
-                    boolean alterou = false;
-
-                    while (true) {
-
-                        System.out.println("\n=== SELECIONE UM CARD ===");
-
-                        for (int i = 0; i < cardsGerados.size(); i++) {
-                            System.out.println((i + 1) + " - "
-                                    + cardsGerados.get(i).getInsightVinculado().getDescricaoTipo()
-                                    + " | Status: "
-                                    + cardsGerados.get(i).getStatus());
-                        }
-                        System.out.println("0 - Voltar");
-                        System.out.print("Informe a opção desejada: : ");
-                        int indice = sc.nextInt();
-
-                        if (indice == 0) {
-                            System.out.println("Retornando ao menu...");
-                            break;
-                        }
-
-                        indice = indice - 1;
-
-                        if (indice < 0 || indice >= cardsGerados.size()) {
-                            System.out.println("Card não existe. Tente novamente.");
-                            continue;
-                        }
-
-                        while (true) {
-
-                            System.out.println("\nCard selecionado: "
-                                    + cardsGerados.get(indice).getInsightVinculado().getDescricaoTipo());
-
-                            System.out.println("1 - EXECUTADO");
-                            System.out.println("2 - DESCARTADO");
-                            System.out.println("0 - Voltar");
-                            System.out.print("Informe a opção desejada: ");
-
-                            int status = sc.nextInt();
-
-                            if (status == 0) {
-                                System.out.println("Voltando para o menu...");
-                                break;
-                            }
-
-                            if (status == 1) {
-                                cardsGerados.get(indice).setStatus(StatusAcao.EXECUTADO);
-                                System.out.println("Status atualizado para EXECUTADO");
-                                alterou = true;
-                                break;
-                            }
-
-                            if (status == 2) {
-                                cardsGerados.get(indice).setStatus(StatusAcao.DESCARTADO);
-                                System.out.println("Status atualizado para DESCARTADO");
-                                alterou = true;
-                                break;
-                            }
-
-                            System.out.println("Status inválido. Tente novamente.");
-                        }
-
-                        break;
-                    }
-
-                    if (alterou) {
-                        System.out.println("\nDASHBOARD ATUALIZADO:");
-                        processador.priorizarEExibirCards(cardsGerados);
-                    }
-
                     break;
 
                 case 4:
+                    if (cardsAtuais == null || cardsAtuais.isEmpty()) {
+                        cardsAtuais = dao.listarCards();
+                    }
 
-                    if (cardsGerados == null || cardsGerados.isEmpty()) {
-                        System.out.println("Nenhum card gerado.");
+                    if (cardsAtuais.isEmpty()) {
+                        System.out.println("Nenhum card disponível para alterar status.");
                         break;
                     }
 
-                    int pend = 0;
-                    int exec = 0;
-                    int desc = 0;
+                    System.out.println("\n=== SELECIONE O CARD PARA ATUALIZAR STATUS (UPDATE) ===");
+                    for (int i = 0; i < cardsAtuais.size(); i++) {
+                        CardAcao c = cardsAtuais.get(i);
+                        System.out.println((i + 1) + " - [ID: " + c.getId() + "] "
+                                + c.getInsightVinculado().getDescricaoTipo()
+                                + " | Status atual: " + c.getStatus());
+                    }
+                    System.out.println("0 - Cancelar");
+                    System.out.print("Informe o número do card: ");
+                    int indice = sc.nextInt();
 
-                    for (CardAcao c : cardsGerados) {
-                        switch (c.getStatus()) {
-                            case PENDENTE -> pend++;
-                            case EXECUTADO -> exec++;
-                            case DESCARTADO -> desc++;
-                        }
+                    if (indice == 0) {
+                        System.out.println("Operação cancelada.");
+                        break;
                     }
 
-                    System.out.println("\n=== DASHBOARD RESUMO ===");
-                    System.out.println("Total de cards: " + cardsGerados.size());
-                    System.out.println("Pendentes: " + pend);
-                    System.out.println("Executados: " + exec);
-                    System.out.println("Descartados: " + desc);
+                    int posicao = indice - 1;
+                    if (posicao < 0 || posicao >= cardsAtuais.size()) {
+                        System.out.println("Opção inválida.");
+                        break;
+                    }
 
+                    CardAcao cardSelecionado = cardsAtuais.get(posicao);
+
+                    System.out.println("\nEscolha o novo status:");
+                    System.out.println("1 - PENDENTE");
+                    System.out.println("2 - EM ANDAMENTO");
+                    System.out.println("3 - CONCLUIDO");
+                    System.out.println("4 - DESCARTADO");
+                    System.out.println("0 - Cancelar");
+                    System.out.print("Informe a opção: ");
+                    int opStatus = sc.nextInt();
+
+                    StatusAcao novoStatus = switch (opStatus) {
+                        case 1 -> StatusAcao.PENDENTE;
+                        case 2 -> StatusAcao.EM_ANDAMENTO;
+                        case 3 -> StatusAcao.CONCLUIDO;
+                        case 4 -> StatusAcao.DESCARTADO;
+                        default -> null;
+                    };
+
+                    if (novoStatus != null) {
+                        dao.atualizarStatus(cardSelecionado.getId(), novoStatus);
+                        cardSelecionado.setStatus(novoStatus);
+                        System.out.println("Status atualizado com sucesso!");
+                    } else if (opStatus != 0) {
+                        System.out.println("Status inválido.");
+                    }
                     break;
 
                 case 5:
+                    if (cardsAtuais == null || cardsAtuais.isEmpty()) {
+                        cardsAtuais = dao.listarCards();
+                    }
 
-                    if (cardsGerados == null || cardsGerados.isEmpty()) {
-                        System.out.println("Gere os cards primeiro!");
+                    if (cardsAtuais.isEmpty()) {
+                        System.out.println("Nenhum card disponível para exclusão.");
                         break;
                     }
 
-                    while (true) {
+                    System.out.println("\n=== SELECIONE O CARD PARA EXCLUIR (DELETE) ===");
+                    for (int i = 0; i < cardsAtuais.size(); i++) {
+                        CardAcao c = cardsAtuais.get(i);
+                        System.out.println((i + 1) + " - [ID: " + c.getId() + "] "
+                                + c.getInsightVinculado().getDescricaoTipo()
+                                + " | Tarefa: " + c.getSugestaoTarefa());
+                    }
+                    System.out.println("0 - Cancelar");
+                    System.out.print("Informe o número do card a remover: ");
+                    int delIndice = sc.nextInt();
 
-                        System.out.println("\n=== FILTRAR CARDS ===");
-                        System.out.println("1 - Pendentes");
-                        System.out.println("2 - Executados");
-                        System.out.println("3 - Descartados");
-                        System.out.println("4 - Todos");
-                        System.out.println("0 - Voltar");
-                        System.out.print("Informe a opção desejada: ");
-
-                        int filtro = sc.nextInt();
-
-                        if (filtro == 0) {
-                            System.out.println("Retornando ao menu...");
-                            break;
-                        }
-
-                        if (filtro < 1 || filtro > 4) {
-                            System.out.println("Opção inválida. Tente novamente.");
-                            continue;
-                        }
-
-                        boolean encontrou = false;
-
-                        System.out.println("\n=== RESULTADO DO FILTRO ===");
-
-                        for (CardAcao c : cardsGerados) {
-
-                            boolean mostrar = switch (filtro) {
-                                case 1 -> c.getStatus() == StatusAcao.PENDENTE;
-                                case 2 -> c.getStatus() == StatusAcao.EXECUTADO;
-                                case 3 -> c.getStatus() == StatusAcao.DESCARTADO;
-                                case 4 -> true;
-                                default -> false;
-                            };
-                            if (mostrar) {
-                                c.exibirCard();
-                                encontrou = true;
-                            }
-                        }
-                        if (!encontrou) {
-                            System.out.println("Não existem cards para esse filtro.");
-                        }
+                    if (delIndice == 0) {
+                        System.out.println("Operação cancelada.");
                         break;
+                    }
+
+                    int posDel = delIndice - 1;
+                    if (posDel >= 0 && posDel < cardsAtuais.size()) {
+                        CardAcao cardRemover = cardsAtuais.get(posDel);
+                        dao.excluirCard(cardRemover.getId());
+                        cardsAtuais.remove(posDel);
+                        System.out.println("Card removido do Oracle e da lista com sucesso!");
+                    } else {
+                        System.out.println("Opção inválida.");
                     }
                     break;
 
                 case 6:
-                    System.out.println("Encerrando sistema...");
+                    if (cardsAtuais == null || cardsAtuais.isEmpty()) {
+                        cardsAtuais = dao.listarCards();
+                    }
+
+                    if (cardsAtuais.isEmpty()) {
+                        System.out.println("Não há cards cadastrados para gerar métricas.");
+                        break;
+                    }
+
+                    Map<String, Number> metricas = processador.calcularMetricas(cardsAtuais);
+                    System.out.println("\n=== MÉTRICAS GERAIS (PROCESSADOR SERVICE) ===");
+                    System.out.println("Total de Cards: " + metricas.get("total"));
+                    System.out.println("Cards Pendentes: " + metricas.get("pendentes"));
+                    System.out.println("Cards Concluídos: " + metricas.get("concluidos"));
+                    System.out.println("Taxa de Resolução: " + metricas.get("taxaResolucao") + "%");
+                    break;
+
+                case 7:
+                    if (cardsAtuais == null || cardsAtuais.isEmpty()) {
+                        cardsAtuais = dao.listarCards();
+                    }
+
+                    if (cardsAtuais.isEmpty()) {
+                        System.out.println("Não há cards cadastrados para filtrar.");
+                        break;
+                    }
+
+                    System.out.println("\n=== FILTRAR CARDS ===");
+                    System.out.println("1 - Pendentes");
+                    System.out.println("2 - Em Andamento");
+                    System.out.println("3 - Concluídos");
+                    System.out.println("4 - Descartados");
+                    System.out.println("0 - Cancelar");
+                    System.out.print("Escolha o status: ");
+                    int filtro = sc.nextInt();
+
+                    StatusAcao statusFiltro = switch (filtro) {
+                        case 1 -> StatusAcao.PENDENTE;
+                        case 2 -> StatusAcao.EM_ANDAMENTO;
+                        case 3 -> StatusAcao.CONCLUIDO;
+                        case 4 -> StatusAcao.DESCARTADO;
+                        default -> null;
+                    };
+
+                    if (statusFiltro != null) {
+                        List<CardAcao> filtrados = processador.filtrarPorStatus(cardsAtuais, statusFiltro);
+                        System.out.println("\n=== RESULTADO DO FILTRO: " + statusFiltro + " (" + filtrados.size() + ") ===");
+                        if (filtrados.isEmpty()) {
+                            System.out.println("Nenhum card encontrado com este status.");
+                        } else {
+                            filtrados.forEach(CardAcao::exibirCard);
+                        }
+                    }
+                    break;
+
+                case 8:
+                    System.out.println("Encerrando o RadarIA. Até logo!");
                     break;
 
                 default:
-                    System.out.println("Opção inválida.");
+                    System.out.println("Opção inválida. Tente novamente.");
             }
 
-        } while (opcao != 6);
+        } while (opcao != 8);
 
         sc.close();
     }
 
     public static void imprimirTextoFormatado(String texto, int largura) {
-
         String[] palavras = texto.split(" ");
         StringBuilder linha = new StringBuilder();
 
@@ -248,7 +260,6 @@ public class Main {
             }
             linha.append(palavra).append(" ");
         }
-
         System.out.println(linha);
     }
 }

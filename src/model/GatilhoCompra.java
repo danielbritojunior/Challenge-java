@@ -1,7 +1,5 @@
 package model;
 
-import model.Insight;
-
 import java.time.LocalTime;
 
 public class GatilhoCompra extends Insight {
@@ -9,6 +7,11 @@ public class GatilhoCompra extends Insight {
 
     public GatilhoCompra(LocalTime timestamp, String trechoTexto, String produtoSugerido) {
         super(timestamp, trechoTexto);
+        this.produtoSugerido = produtoSugerido;
+    }
+
+    public GatilhoCompra(Integer id, LocalTime timestamp, String trechoTexto, String produtoSugerido) {
+        super(id, timestamp, trechoTexto);
         this.produtoSugerido = produtoSugerido;
     }
 
